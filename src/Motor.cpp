@@ -132,7 +132,7 @@ static void checkDelayCallback(Motor* instance) {
 void Motor::startDelay() {
   start_time = millis();
   time_passed = 0;
-  delayChecker.attach_ms(10, checkDelayCallback, this);
+  delayChecker.attach_ms(1, checkDelayCallback, this);
 }
 
 void Motor::setDuty(int target_duty) {
