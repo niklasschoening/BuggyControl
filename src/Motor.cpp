@@ -1,6 +1,6 @@
 #include "Motor.h"
 
-Motor::Motor() {
+Motor::Motor() : delayChecker() {
   // Default-Konstruktor für globale Initialisierung
   pin_front = 0;
   pin_back = 0;
@@ -12,10 +12,12 @@ Motor::Motor() {
   threshold = 30;
   threshold_time = 300;
   current_duty = 0;
+  time_passed = 0;
+  start_time = 0;
 }
 
 Motor::Motor(int _pin_front, int _pin_back, int _max_duty, int _min_duty,
-             int _direction_change_delay, int _freq) {
+             int _direction_change_delay, int _freq) : delayChecker() {
   pin_front = _pin_front;
   pin_back = _pin_back;
   max_duty = _max_duty;
@@ -26,6 +28,8 @@ Motor::Motor(int _pin_front, int _pin_back, int _max_duty, int _min_duty,
   threshold = 30;
   threshold_time = 300;
   current_duty = 0;
+
+  last_duty = 0;
 
   // Konfiguration der jeweiligen Pins
   ledcAttach(pin_front, freq, 8);
@@ -92,18 +96,43 @@ void Motor::fadeDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
 
   if (target_duty > 0) {
-    ledcFade(pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
     ledcWrite(pin_back, 0);
+    ledcFade(pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
   } else if (target_duty < 0) {
-    ledcFade(pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
     ledcWrite(pin_front, 0);
+    ledcFade(pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
   } else {
-    safetyDelay();
+    ledcWrite(pin_front, 0);
+    ledcWrite(pin_back, 0);
+    startDelay();
   }
 
   current_duty = target_duty;
   Serial.print("current_duty = ");
   Serial.println(current_duty);
+}
+
+bool Motor::checkDelay() {
+  bool is_blocking;
+  time_passed = millis() - start_time;
+  if(time_passed <= direction_change_delay) {
+    is_blocking = true;
+  }
+  else {
+    is_blocking = false;
+    delayChecker.detach();
+  }
+  return is_blocking;
+}
+
+static void checkDelayCallback(Motor* instance) {
+  instance->checkDelay();
+}
+
+void Motor::startDelay() {
+  start_time = millis();
+  time_passed = 0;
+  delayChecker.attach_ms(10, checkDelayCallback, this);
 }
 
 void Motor::setDuty(int target_duty) {
@@ -124,8 +153,8 @@ void Motor::setDuty(int target_duty) {
     Serial.print(target_duty);
     Serial.println(" bei pin_back");
   } else {
-    safetyDelay();
-    Serial.println("safety_delay durchgeführt");
+    startDelay();
+    Serial.println("safety_delay initialisiert");
   }
 
   current_duty = target_duty;
@@ -139,25 +168,35 @@ void Motor::safetyDelay() {
   Serial.println("safety_delay durchgeführt");
 }
 
-void Motor::changeSpeed(int direction_vector) {
+bool Motor::changeSpeed(int direction_vector) {
   Serial.print("changeSpeed mit direction_vector ");
   Serial.println(direction_vector);
 
   int target_duty = current_duty + direction_vector;
 
+  last_duty = current_duty;
+
+  if(checkDelay()) {
+    return false;
+  }
+
+  // Prüfe auf Richtungswechsel und stoppe Motor erst
+  if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
+    ledcWrite(pin_front, 0);
+    ledcWrite(pin_back, 0);
+    current_duty = 0;
+    startDelay();
+    Serial.println("Richtungswechsel erkannt - Motor gestoppt, Delay gestartet");
+    return false;
+  }
+
   if (target_duty > 0) {
-    if (current_duty < 0) {
-      safetyDelay();
-    }
     if (abs(target_duty - current_duty) < threshold) {
       setDuty(target_duty);
     } else {
       fadeDuty(target_duty);
     }
   } else if (target_duty < 0) {
-    if (current_duty > 0) {
-      safetyDelay();
-    }
     if (abs(target_duty - current_duty) < threshold) {
       setDuty(target_duty);
     } else {
@@ -166,4 +205,5 @@ void Motor::changeSpeed(int direction_vector) {
   } else {
     setDuty(0);
   }
+  return true;
 }
