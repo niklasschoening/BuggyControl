@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ESP32Servo.h>
+#include <LEDManager.h>
 
 class SteeringServo {
 private:
@@ -11,6 +12,7 @@ private:
   int max_steering_degree;  // maximaler Lenkwert
   int current_steering_degree;
   int deadzone;
+
   Servo servo;
 
   int percentToDegree(int steering_percent);

@@ -2,8 +2,10 @@
 
 Motor::Motor() : delayChecker() {
   // Default-Konstruktor für globale Initialisierung
-  pin_front = 0;
-  pin_back = 0;
+  pwm_pin_front = 0;
+  pwm_pin_back = 0;
+  high_pin_front = 0;
+  high_pin_back = 0;
   max_duty = 0;
   min_duty = 0;
   direction_change_delay = 0;
@@ -16,10 +18,12 @@ Motor::Motor() : delayChecker() {
   start_time = 0;
 }
 
-Motor::Motor(int _pin_front, int _pin_back, int _max_duty, int _min_duty,
+Motor::Motor(int _pwm_pin_front, int _pwm_pin_back, int _high_pin_front, int _high_pin_back, int _max_duty, int _min_duty,
              int _direction_change_delay, int _freq) : delayChecker() {
-  pin_front = _pin_front;
-  pin_back = _pin_back;
+  pwm_pin_front = _pwm_pin_front;
+  pwm_pin_back = _pwm_pin_back;
+  high_pin_back = _high_pin_back;
+  high_pin_front = _high_pin_front;
   max_duty = _max_duty;
   min_duty = _min_duty;
   freq = _freq;
@@ -32,19 +36,25 @@ Motor::Motor(int _pin_front, int _pin_back, int _max_duty, int _min_duty,
   last_duty = 0;
 
   // Konfiguration der jeweiligen Pins
-  ledcAttach(pin_front, freq, 8);
-  ledcAttach(pin_back, freq, 8);
+  ledcAttach(pwm_pin_front, freq, 8);
+  ledcAttach(pwm_pin_back, freq, 8);
+
+  pinMode(high_pin_front, OUTPUT);
+  pinMode(high_pin_back, OUTPUT);
 
   // Zur Sicherheit Pins 0 setzen
-  ledcWrite(pin_front, 0);
-  ledcWrite(pin_back, 0);
+  ledcWrite(pwm_pin_front, 0);
+  ledcWrite(pwm_pin_back, 0);
+
+  digitalWrite(high_pin_front, LOW);
+  digitalWrite(high_pin_back, LOW);
 }
 
 int Motor::getPin(int type) {
   if (type == -1) {
-    return pin_back;
+    return pwm_pin_back;
   } else if (type == 1) {
-    return pin_front;
+    return pwm_pin_front;
   } else {
     return 0;
   }
@@ -96,14 +106,24 @@ void Motor::fadeDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
 
   if (target_duty > 0) {
-    ledcWrite(pin_back, 0);
-    ledcFade(pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    ledcWrite(pwm_pin_back, 0);
+    digitalWrite(high_pin_back, LOW);
+
+    digitalWrite(high_pin_front, HIGH);
+    ledcFade(pwm_pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
   } else if (target_duty < 0) {
-    ledcWrite(pin_front, 0);
-    ledcFade(pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    ledcWrite(pwm_pin_front, 0);
+    digitalWrite(high_pin_front, LOW);
+
+    digitalWrite(high_pin_back, HIGH);
+    ledcFade(pwm_pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
   } else {
-    ledcWrite(pin_front, 0);
-    ledcWrite(pin_back, 0);
+    ledcWrite(pwm_pin_front, 0);
+    digitalWrite(high_pin_front, LOW);
+
+    ledcWrite(pwm_pin_back, 0);
+    digitalWrite(high_pin_back, LOW);
+
     startDelay();
   }
 
@@ -132,7 +152,14 @@ static void checkDelayCallback(Motor* instance) {
 void Motor::startDelay() {
   start_time = millis();
   time_passed = 0;
-  delayChecker.attach_ms(1, checkDelayCallback, this);
+  
+  ledcWrite(pwm_pin_front, 0);
+  digitalWrite(high_pin_front, LOW);
+
+  ledcWrite(pwm_pin_back, 0);
+  digitalWrite(high_pin_back, LOW);
+
+  delayChecker.attach_ms(10, checkDelayCallback, this);
 }
 
 void Motor::setDuty(int target_duty) {
@@ -141,17 +168,25 @@ void Motor::setDuty(int target_duty) {
   Serial.println(target_duty);
 
   if (target_duty > 0) {
-    ledcWrite(pin_back, 0);
-    ledcWrite(pin_front, abs(target_duty) * 255 / 100);
+    ledcWrite(pwm_pin_back, 0);
+    digitalWrite(high_pin_back, LOW);
+
+    ledcWrite(pwm_pin_front, abs(target_duty) * 255 / 100);
+    digitalWrite(high_pin_front, HIGH);
+
     Serial.print("Duty auf ");
     Serial.print(target_duty);
-    Serial.println(" bei pin_front");
+    Serial.println(" bei pwm_pin_front");
   } else if (target_duty < 0) {
-    ledcWrite(pin_front, 0);
-    ledcWrite(pin_back, abs(target_duty) * 255 / 100);
+    ledcWrite(pwm_pin_front, 0);
+    digitalWrite(high_pin_front, LOW);
+
+    ledcWrite(pwm_pin_back, abs(target_duty) * 255 / 100);
+    digitalWrite(high_pin_back, HIGH);
+
     Serial.print("Duty auf ");
     Serial.print(target_duty);
-    Serial.println(" bei pin_back");
+    Serial.println(" bei pwm_pin_back");
   } else {
     startDelay();
     Serial.println("safety_delay initialisiert");
@@ -163,8 +198,8 @@ void Motor::setDuty(int target_duty) {
 void Motor::safetyDelay() {
   Serial.println("safety_delay gestartet");
   delay(direction_change_delay);
-  ledcWrite(pin_front, 0);
-  ledcWrite(pin_back, 0);
+  ledcWrite(pwm_pin_front, 0);
+  ledcWrite(pwm_pin_back, 0);
   Serial.println("safety_delay durchgeführt");
 }
 
@@ -182,12 +217,11 @@ bool Motor::changeSpeed(int direction_vector) {
 
   // Prüfe auf Richtungswechsel und stoppe Motor erst
   if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
-    ledcWrite(pin_front, 0);
-    ledcWrite(pin_back, 0);
+    ledcWrite(pwm_pin_front, 0);
+    ledcWrite(pwm_pin_back, 0);
     current_duty = 0;
-    startDelay();
+    delay(10);
     Serial.println("Richtungswechsel erkannt - Motor gestoppt, Delay gestartet");
-    return false;
   }
 
   if (target_duty > 0) {

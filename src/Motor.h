@@ -6,8 +6,11 @@
 
 class Motor {
 private:
-  int pin_front;  // Pin für Vorwärtsbewegung
-  int pin_back;   // Pin für Rückwärtsbewegung
+  int pwm_pin_front;  // Pin für Vorwärtsbewegung
+  int pwm_pin_back;   // Pin für Rückwärtsbewegung
+
+  int high_pin_front;
+  int high_pin_back; 
 
   int max_duty;   // maximal erlaubter duty-Wert, <=100
   int min_duty;   // minimaler Duty-Wert, bei dem sich der Motor noch dreht
@@ -32,7 +35,7 @@ private:
   void startDelay();
 
 public:
-  Motor(int pin_front, int pin_back, int max_duty, int min_duty,
+  Motor(int pwm_pin_front, int pwm_pin_back, int high_pin_front, int high_pin_back, int max_duty, int min_duty,
         int direction_change_delay, int freq);
   Motor();  // Default-Konstruktor
 
