@@ -88,7 +88,7 @@ void Motor::setThresholdTime(int tt) {
   threshold_time = tt;
 }
 
-int Motor::checkDutyRange(int target_duty) {
+int IRAM_ATTR Motor::checkDutyRange(int target_duty) {
   if (abs(target_duty) < deadzone) {
     return 0;
   } else if (abs(target_duty) < min_duty) {
@@ -108,7 +108,7 @@ int Motor::checkDutyRange(int target_duty) {
   }
 }
 
-void Motor::fadeDuty(int target_duty) {
+void IRAM_ATTR Motor::fadeDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
 
   // Prüfe auf Richtungswechsel über die Null
@@ -149,7 +149,7 @@ void Motor::fadeDuty(int target_duty) {
 }
 
 
-void Motor::setDuty(int target_duty) {
+void IRAM_ATTR Motor::setDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
 
   // Prüfe auf Richtungswechsel über die Null
@@ -187,7 +187,7 @@ void Motor::setDuty(int target_duty) {
   }
 }
 
-void Motor::changeSpeed(int direction_vector) {
+void IRAM_ATTR Motor::changeSpeed(int direction_vector) {
   int target_duty = current_duty + direction_vector;
 
   last_duty = current_duty;
@@ -200,7 +200,7 @@ void Motor::changeSpeed(int direction_vector) {
   }
 }
 
-void Motor::changeSpeedAbsolute(int target_duty)
+void IRAM_ATTR Motor::changeSpeedAbsolute(int target_duty)
 {
   target_duty = checkDutyRange(target_duty);
 

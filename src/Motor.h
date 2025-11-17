@@ -22,9 +22,9 @@ private:
   int current_duty;
   int last_duty;
 
-  int checkDutyRange(int target_duty);
-  void fadeDuty(int target_duty);
-  void setDuty(int target_duty);
+  int IRAM_ATTR checkDutyRange(int target_duty);
+  void IRAM_ATTR fadeDuty(int target_duty);
+  void IRAM_ATTR setDuty(int target_duty);
 
 public:
   Motor(int pwm_pin_front, int pwm_pin_back, int high_pin_front, int high_pin_back, int max_duty, int min_duty,
@@ -33,8 +33,8 @@ public:
 
   int getPin(int type);
   int getCurrentDuty();
-  void changeSpeed(int direction_vector);
-  void changeSpeedAbsolute(int target_duty);
+  void IRAM_ATTR changeSpeed(int direction_vector);
+  void IRAM_ATTR changeSpeedAbsolute(int target_duty);
 
   void setDeadzone(int dz);
   void setThreshold(int th);
