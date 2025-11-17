@@ -25,7 +25,6 @@ private:
   int checkDutyRange(int target_duty);
   void fadeDuty(int target_duty);
   void setDuty(int target_duty);
-  void safetyDelay();
 
 public:
   Motor(int pwm_pin_front, int pwm_pin_back, int high_pin_front, int high_pin_back, int max_duty, int min_duty,

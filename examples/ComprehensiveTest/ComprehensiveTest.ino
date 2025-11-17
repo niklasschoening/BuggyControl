@@ -18,15 +18,18 @@
 // ========================================
 
 // Motor initialisieren (Pins 13 & 12 für H-Bridge)
-Motor motor(13,      // pin_front
-            12,      // pin_back
+Motor motor(13,      // pwm_pin_front
+            12,      // pwm_pin_back
+            14,      // high_pin_front
+            27,      // high_pin_back
             100,     // max_duty (maximale Geschwindigkeit 100%)
             30,      // min_duty (minimale Geschwindigkeit 30%)
-            1000,    // direction_change_delay (1 Sekunde Pause beim Richtungswechsel)
-            10000);  // freq (10kHz PWM-Frequenz)
+            500,     // direction_change_delay (0.5 Sekunden Pause beim Richtungswechsel)
+            25000);  // freq (25kHz PWM-Frequenz)
 
 // Servo initialisieren (Pin 23)
-SteeringServo steering(23,   // pin
+SteeringServo steering(23,   // control_pin
+                       -3,   // power_pin
                        90,   // rest_position (90° = geradeaus)
                        20,   // max_steering_degree (±20° Lenkwinkel)
                        6);   // deadzone (Totzone für präzises Lenken)
@@ -70,31 +73,31 @@ void scenario1_StraightDriving() {
   printStatus("Langsame Beschleunigung auf 30%");
   steering.setRestPosition();
   frontLights.turnOn(100);
-  motor.changeSpeed(30);  // Von 0 auf 30
+  motor.changeSpeedAbsolute(30);  // Absolut auf 30%
   delay(3000);
 
   // Schritt 2: Mittlere Geschwindigkeit
   printStatus("Beschleunigung auf 50%");
-  motor.changeSpeed(20);  // Von 30 auf 50
+  motor.changeSpeedAbsolute(50);  // Absolut auf 50%
   delay(3000);
 
   // Schritt 3: Hohe Geschwindigkeit
   printStatus("Beschleunigung auf 80%");
-  motor.changeSpeed(30);  // Von 50 auf 80
+  motor.changeSpeedAbsolute(80);  // Absolut auf 80%
   delay(3000);
 
   // Schritt 4: Allmähliches Abbremsen
   printStatus("Abbremsen auf 50%");
-  motor.changeSpeed(-30);  // Von 80 auf 50
+  motor.changeSpeedAbsolute(50);  // Absolut auf 50%
   delay(2000);
 
   printStatus("Abbremsen auf 30%");
-  motor.changeSpeed(-20);  // Von 50 auf 30
+  motor.changeSpeedAbsolute(30);  // Absolut auf 30%
   delay(2000);
 
   // Schritt 5: Stoppen
   printStatus("Stopp");
-  motor.changeSpeed(-30);  // Von 30 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   rearLights.turnOn(100);  // Bremslichter
   delay(1000);
   rearLights.rest();       // Zurück zu normaler Helligkeit
@@ -113,12 +116,12 @@ void scenario2_TurnLeft() {
 
   // Beschleunigen
   printStatus("Beschleunigung auf 40%");
-  motor.changeSpeed(40);  // Von 0 auf 40
+  motor.changeSpeedAbsolute(40);  // Absolut auf 40%
   delay(1000);
 
   // Lenken nach links
   printStatus("Lenke 50% nach links");
-  steering.steer(-50);
+  steering.steerAbsolute(-50);
   delay(3000);
 
   // Geradeaus zurück
@@ -132,7 +135,7 @@ void scenario2_TurnLeft() {
 
   // Stoppen
   printStatus("Stopp");
-  motor.changeSpeed(-40);  // Von 40 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   waitForMotor();
   delay(2000);
 }
@@ -147,12 +150,12 @@ void scenario3_TurnRight() {
 
   // Beschleunigen
   printStatus("Beschleunigung auf 40%");
-  motor.changeSpeed(40);
+  motor.changeSpeedAbsolute(40);
   delay(1000);
 
   // Lenken nach rechts
   printStatus("Lenke 50% nach rechts");
-  steering.steer(50);
+  steering.steerAbsolute(50);
   delay(3000);
 
   // Geradeaus zurück
@@ -166,7 +169,7 @@ void scenario3_TurnRight() {
 
   // Stoppen
   printStatus("Stopp");
-  motor.changeSpeed(-40);  // Von 40 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   waitForMotor();
   delay(2000);
 }
@@ -175,7 +178,7 @@ void scenario4_Slalom() {
   printHeader("SZENARIO 4: Slalom-Fahrt");
 
   printStatus("Starte Slalom mit 40% Geschwindigkeit");
-  motor.changeSpeed(40);  // Von 0 auf 40
+  motor.changeSpeedAbsolute(40);  // Absolut auf 40%
   delay(500);
 
   // Slalom-Sequenz
@@ -183,7 +186,7 @@ void scenario4_Slalom() {
     // Links
     printStatus("Kurve links");
     leftIndicator.startIndicating();
-    steering.steer(-60);
+    steering.steerAbsolute(-60);
     delay(1500);
     leftIndicator.stopIndicating();
 
@@ -194,7 +197,7 @@ void scenario4_Slalom() {
     // Rechts
     printStatus("Kurve rechts");
     rightIndicator.startIndicating();
-    steering.steer(60);
+    steering.steerAbsolute(60);
     delay(1500);
     rightIndicator.stopIndicating();
 
@@ -205,7 +208,7 @@ void scenario4_Slalom() {
 
   // Stoppen
   printStatus("Stopp nach Slalom");
-  motor.changeSpeed(-40);  // Von 40 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   steering.setRestPosition();
   waitForMotor();
   delay(2000);
@@ -222,12 +225,12 @@ void scenario5_ReverseParking() {
 
   // Langsam rückwärts
   printStatus("Rueckwaertsfahrt -30%");
-  motor.changeSpeed(-30);  // Von 0 auf -30
+  motor.changeSpeedAbsolute(-30);  // Absolut auf -30%
   delay(2000);
 
   // Einlenken nach links beim Rückwärtsfahren
   printStatus("Einlenken nach links");
-  steering.steer(-40);
+  steering.steerAbsolute(-40);
   delay(2000);
 
   // Geradeaus zurück
@@ -237,7 +240,7 @@ void scenario5_ReverseParking() {
 
   // Stoppen
   printStatus("Stopp - Eingeparkt!");
-  motor.changeSpeed(30);  // Von -30 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
 
   // Warnblinker aus
   leftIndicator.stopIndicating();
@@ -252,12 +255,12 @@ void scenario6_EmergencyBrake() {
 
   // Hohe Geschwindigkeit
   printStatus("Beschleunigung auf 70%");
-  motor.changeSpeed(70);  // Von 0 auf 70
+  motor.changeSpeedAbsolute(70);  // Absolut auf 70%
   delay(3000);
 
   // Notbremsung!
   printStatus("!!! NOTBREMSUNG !!!");
-  motor.changeSpeed(-70);  // Von 70 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
 
   // Warnblinker und Bremslichter
   leftIndicator.startIndicating();
@@ -286,20 +289,20 @@ void scenario7_NightDriving() {
 
   // Langsame Fahrt
   printStatus("Langsame Fahrt (40%)");
-  motor.changeSpeed(40);  // Von 0 auf 40
+  motor.changeSpeedAbsolute(40);  // Absolut auf 40%
   delay(4000);
 
   // Kurve mit Blinker
   printStatus("Rechtsabbiegen mit Blinker");
   rightIndicator.startIndicating();
-  steering.steer(50);
+  steering.steerAbsolute(50);
   delay(3000);
   rightIndicator.stopIndicating();
   steering.setRestPosition();
 
   // Stoppen
   printStatus("Anhalten");
-  motor.changeSpeed(-40);  // Von 40 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
 
   // Lichter zurück auf Standard
   frontLights.rest();
@@ -315,15 +318,14 @@ void scenario8_SpeedTest() {
   printStatus("Teste verschiedene Geschwindigkeitsstufen");
   steering.setRestPosition();
 
-  int speeds[] = {20, 20, 20, 20, 20};  // Relative Änderungen: 0->20, 20->40, 40->60, 60->80, 80->100
+  int speeds[] = {20, 40, 60, 80, 100};  // Absolute Werte: 20%, 40%, 60%, 80%, 100%
 
   for (int i = 0; i < 5; i++) {
-    int current = motor.getCurrentDuty();
     char msg[50];
-    sprintf(msg, "Erhoehe um %d%% (aktuell: %d%%)", speeds[i], current);
+    sprintf(msg, "Setze auf %d%% absolut", speeds[i]);
     printStatus(msg);
 
-    motor.changeSpeed(speeds[i]);
+    motor.changeSpeedAbsolute(speeds[i]);
     Serial.print("  Neuer Duty: ");
     Serial.println(motor.getCurrentDuty());
     delay(2000);
@@ -331,7 +333,7 @@ void scenario8_SpeedTest() {
 
   // Stoppen
   printStatus("Geschwindigkeitstest abgeschlossen - Stopp");
-  motor.changeSpeed(-100);  // Von 100 auf 0
+  motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   waitForMotor();
   delay(2000);
 }
@@ -348,7 +350,7 @@ void scenario9_SteeringTest() {
     sprintf(msg, "Lenkwinkel: %d%%", angles[i]);
     printStatus(msg);
 
-    steering.steer(angles[i]);
+    steering.steerAbsolute(angles[i]);
     Serial.print("  Aktueller Servowinkel: ");
     Serial.println(steering.getCurrentSteeringDegree());
     delay(1000);

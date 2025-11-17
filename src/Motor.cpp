@@ -103,29 +103,41 @@ void Motor::fadeDuty(int target_duty) {
 
   target_duty = checkDutyRange(target_duty);
 
+  // Prüfe auf Richtungswechsel über die Null
+  if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
+    Serial.println("Richtungswechsel erkannt in fadeDuty - stoppe Motor");
+    ledcWrite(pwm_pin_front, 0);
+    digitalWrite(high_pin_front, LOW);
+    ledcWrite(pwm_pin_back, 0);
+    digitalWrite(high_pin_back, LOW);
+    current_duty = 0;
+    delay(direction_change_delay);
+  }
+
   if (target_duty > 0) {
     ledcWrite(pwm_pin_back, 0);
     digitalWrite(high_pin_back, LOW);
 
     digitalWrite(high_pin_front, HIGH);
     ledcFade(pwm_pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    current_duty = target_duty;
   } else if (target_duty < 0) {
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
 
     digitalWrite(high_pin_back, HIGH);
     ledcFade(pwm_pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    current_duty = target_duty;
   } else {
+    // target_duty == 0
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
-
     ledcWrite(pwm_pin_back, 0);
     digitalWrite(high_pin_back, LOW);
-
     delay(direction_change_delay);
+    current_duty = 0;
   }
 
-  current_duty = target_duty;
   Serial.print("current_duty = ");
   Serial.println(current_duty);
 }
@@ -136,12 +148,24 @@ void Motor::setDuty(int target_duty) {
   Serial.print("aktualisierte Duty: ");
   Serial.println(target_duty);
 
+  // Prüfe auf Richtungswechsel über die Null
+  if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
+    Serial.println("Richtungswechsel erkannt in setDuty - stoppe Motor");
+    ledcWrite(pwm_pin_front, 0);
+    digitalWrite(high_pin_front, LOW);
+    ledcWrite(pwm_pin_back, 0);
+    digitalWrite(high_pin_back, LOW);
+    current_duty = 0;
+    delay(direction_change_delay);
+  }
+
   if (target_duty > 0) {
     ledcWrite(pwm_pin_back, 0);
     digitalWrite(high_pin_back, LOW);
 
     ledcWrite(pwm_pin_front, abs(target_duty) * 255 / 100);
     digitalWrite(high_pin_front, HIGH);
+    current_duty = target_duty;
 
     Serial.print("Duty auf ");
     Serial.print(target_duty);
@@ -152,29 +176,20 @@ void Motor::setDuty(int target_duty) {
 
     ledcWrite(pwm_pin_back, abs(target_duty) * 255 / 100);
     digitalWrite(high_pin_back, HIGH);
+    current_duty = target_duty;
 
     Serial.print("Duty auf ");
     Serial.print(target_duty);
     Serial.println(" bei pwm_pin_back");
   } else {
+    // target_duty == 0
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
-
     ledcWrite(pwm_pin_back, 0);
     digitalWrite(high_pin_back, LOW);
-    
     delay(direction_change_delay);
+    current_duty = 0;
   }
-
-  current_duty = target_duty;
-}
-
-void Motor::safetyDelay() {
-  Serial.println("safety_delay gestartet");
-  delay(direction_change_delay);
-  ledcWrite(pwm_pin_front, 0);
-  ledcWrite(pwm_pin_back, 0);
-  Serial.println("safety_delay durchgeführt");
 }
 
 void Motor::changeSpeed(int direction_vector) {
@@ -185,119 +200,26 @@ void Motor::changeSpeed(int direction_vector) {
 
   last_duty = current_duty;
 
-  // Prüfe auf Richtungswechsel und stoppe Motor erst
-  if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
-    ledcWrite(pwm_pin_front, 0);
-    ledcWrite(pwm_pin_back, 0);
-    current_duty = 0;
-    delay(direction_change_delay);
-    Serial.println("Richtungswechsel erkannt - Motor gestoppt, Delay durchgeführt");
-  }
-
-  if (target_duty > 0) {
-    if (abs(target_duty - current_duty) < threshold) {
-      setDuty(target_duty);
-    } else {
-      fadeDuty(target_duty);
-    }
-  } else if (target_duty < 0) {
-    if (abs(target_duty - current_duty) < threshold) {
-      setDuty(target_duty);
-    } else {
-      fadeDuty(target_duty);
-    }
+  // Entscheide ob setDuty oder fadeDuty basierend auf threshold
+  if (abs(target_duty - current_duty) < threshold) {
+    setDuty(target_duty);
   } else {
-    setDuty(0);
+    fadeDuty(target_duty);
   }
 }
 
 void Motor::changeSpeedAbsolute(int target_duty)
 {
   target_duty = checkDutyRange(target_duty);
+
+  // Entscheide ob setDuty oder fadeDuty basierend auf threshold
+  // Richtungswechsel-Logik ist bereits in setDuty() und fadeDuty() eingebaut
   if(abs(current_duty - target_duty) >= threshold)
   {
-    if(current_duty > 0)
-    {
-      if(target_duty < 0)
-      {
-        fadeDuty(0);
-        fadeDuty(target_duty);
-      }
-      else if(target_duty > 0)
-      {
-        fadeDuty(target_duty);
-      }
-      else if(target_duty == 0)
-      {
-        fadeDuty(0);
-      }
-    }
-    else if(current_duty < 0)
-    {
-      if(target_duty > 0)
-      {
-        fadeDuty(0);
-        fadeDuty(target_duty);
-      }
-      else if(target_duty < 0)
-      {
-        fadeDuty(target_duty);
-      }
-      else if(target_duty == 0)
-      {
-        fadeDuty(0);
-      }
-    }
-    else if(current_duty == 0)
-    {
-      fadeDuty(target_duty);
-    }
-    else
-    {
-      setDuty(0);
-    }
+    fadeDuty(target_duty);
   }
   else
   {
-    if(current_duty > 0)
-    {
-      if(target_duty < 0)
-      {
-        setDuty(0);
-        setDuty(target_duty);
-      }
-      else if(target_duty > 0)
-      {
-        setDuty(target_duty);
-      }
-      else if(target_duty == 0)
-      {
-        setDuty(0);
-      }
-    }
-    else if(current_duty < 0)
-    {
-      if(target_duty > 0)
-      {
-        setDuty(0);
-        setDuty(target_duty);
-      }
-      else if(target_duty < 0)
-      {
-        setDuty(target_duty);
-      }
-      else if(target_duty == 0)
-      {
-        setDuty(0);
-      }
-    }
-    else if(current_duty == 0)
-    {
-      setDuty(target_duty);
-    }
-    else
-    {
-      setDuty(0);
-    }
+    setDuty(target_duty);
   }
 }
