@@ -11,7 +11,7 @@ Motor::Motor() {
   direction_change_delay = 0;
   freq = 0;
   deadzone = 5;
-  threshold = 30;
+  threshold = 40;
   threshold_time = 300;
   current_duty = 0;
 }
@@ -113,6 +113,7 @@ void Motor::fadeDuty(int target_duty) {
 
     digitalWrite(high_pin_front, HIGH);
     ledcFade(pwm_pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    delay(threshold_time);
     current_duty = target_duty;
   } else if (target_duty < 0) {
     ledcWrite(pwm_pin_front, 0);
@@ -120,6 +121,7 @@ void Motor::fadeDuty(int target_duty) {
 
     digitalWrite(high_pin_back, HIGH);
     ledcFade(pwm_pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
+    delay(threshold_time);
     current_duty = target_duty;
   } else {
     // target_duty == 0
