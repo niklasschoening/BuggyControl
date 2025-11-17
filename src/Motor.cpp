@@ -188,6 +188,11 @@ void Motor::changeSpeedAbsolute(int target_duty)
 {
   target_duty = checkDutyRange(target_duty);
 
+  if(abs(target_duty - current_duty) <= 3)
+  {
+    return;
+  }
+
   // Entscheide ob setDuty oder fadeDuty basierend auf threshold
   // Richtungswechsel-Logik ist bereits in setDuty() und fadeDuty() eingebaut
   if(abs(current_duty - target_duty) >= threshold)
