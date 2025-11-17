@@ -75,9 +75,6 @@ void Motor::setThresholdTime(int tt) {
 }
 
 int Motor::checkDutyRange(int target_duty) {
-  Serial.print("checkDutyRange: target_duty input = ");
-  Serial.println(target_duty);
-
   if (abs(target_duty) < deadzone) {
     return 0;
   } else if (abs(target_duty) < min_duty) {
@@ -98,14 +95,10 @@ int Motor::checkDutyRange(int target_duty) {
 }
 
 void Motor::fadeDuty(int target_duty) {
-  Serial.print("fadeDuty target_duty start = ");
-  Serial.println(target_duty);
-
   target_duty = checkDutyRange(target_duty);
 
   // Prüfe auf Richtungswechsel über die Null
   if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
-    Serial.println("Richtungswechsel erkannt in fadeDuty - stoppe Motor");
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
     ledcWrite(pwm_pin_back, 0);
@@ -137,20 +130,14 @@ void Motor::fadeDuty(int target_duty) {
     delay(direction_change_delay);
     current_duty = 0;
   }
-
-  Serial.print("current_duty = ");
-  Serial.println(current_duty);
 }
 
 
 void Motor::setDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
-  Serial.print("aktualisierte Duty: ");
-  Serial.println(target_duty);
 
   // Prüfe auf Richtungswechsel über die Null
   if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
-    Serial.println("Richtungswechsel erkannt in setDuty - stoppe Motor");
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
     ledcWrite(pwm_pin_back, 0);
@@ -166,10 +153,6 @@ void Motor::setDuty(int target_duty) {
     ledcWrite(pwm_pin_front, abs(target_duty) * 255 / 100);
     digitalWrite(high_pin_front, HIGH);
     current_duty = target_duty;
-
-    Serial.print("Duty auf ");
-    Serial.print(target_duty);
-    Serial.println(" bei pwm_pin_front");
   } else if (target_duty < 0) {
     ledcWrite(pwm_pin_front, 0);
     digitalWrite(high_pin_front, LOW);
@@ -177,10 +160,6 @@ void Motor::setDuty(int target_duty) {
     ledcWrite(pwm_pin_back, abs(target_duty) * 255 / 100);
     digitalWrite(high_pin_back, HIGH);
     current_duty = target_duty;
-
-    Serial.print("Duty auf ");
-    Serial.print(target_duty);
-    Serial.println(" bei pwm_pin_back");
   } else {
     // target_duty == 0
     ledcWrite(pwm_pin_front, 0);
@@ -193,9 +172,6 @@ void Motor::setDuty(int target_duty) {
 }
 
 void Motor::changeSpeed(int direction_vector) {
-  Serial.print("changeSpeed mit direction_vector ");
-  Serial.println(direction_vector);
-
   int target_duty = current_duty + direction_vector;
 
   last_duty = current_duty;
