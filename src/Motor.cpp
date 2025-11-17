@@ -14,7 +14,7 @@ Motor::Motor() {
   threshold = 40;
   threshold_time = 300;
   current_duty = 0;
-  int last_duty = 0;
+  last_duty = 0;
 }
 
 Motor::Motor(int _pwm_pin_front, 
@@ -42,19 +42,24 @@ Motor::Motor(int _pwm_pin_front,
 
   last_duty = 0;
 
-  // Konfiguration der jeweiligen Pins
-  ledcAttach(pwm_pin_front, freq, 8);
-  ledcAttach(pwm_pin_back, freq, 8);
+  // Konfiguration der jeweiligen Pins nur bei valider Initialisierung
+  if(freq > 0 && max_duty > 0) {
+    ledcAttach(pwm_pin_front, freq, 8);
+    ledcAttach(pwm_pin_back, freq, 8);
 
-  pinMode(high_pin_front, OUTPUT);
-  pinMode(high_pin_back, OUTPUT);
+    pinMode(high_pin_front, OUTPUT);
+    pinMode(high_pin_back, OUTPUT);
 
-  // Zur Sicherheit Pins 0 setzen
-  ledcWrite(pwm_pin_front, 0);
-  ledcWrite(pwm_pin_back, 0);
+    // Zur Sicherheit Pins 0 setzen
+    ledcWrite(pwm_pin_front, 0);
+    ledcWrite(pwm_pin_back, 0);
 
-  digitalWrite(high_pin_front, LOW);
-  digitalWrite(high_pin_back, LOW);
+    digitalWrite(high_pin_front, LOW);
+    digitalWrite(high_pin_back, LOW);
+
+    current_duty = 0;
+    setDuty(0);
+  }
 }
 
 int Motor::getPin(int type) {
