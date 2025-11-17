@@ -53,15 +53,18 @@ platformio run
 #include <BuggyControl.h>
 
 // Motor initialisieren
-Motor motor(13,      // pin_front
-            12,      // pin_back
+Motor motor(13,      // pwm_pin_front
+            12,      // pwm_pin_back
+            14,      // high_pin_front (Enable Pin)
+            27,      // high_pin_back (Enable Pin)
             100,     // max_duty (%)
             30,      // min_duty (%)
             1000,    // direction_change_delay (ms)
             10000);  // freq (Hz)
 
 // Servo initialisieren
-SteeringServo steering(23,   // pin
+SteeringServo steering(23,   // control_pin
+                       -1,   // power_pin (-1 wenn nicht verwendet)
                        90,   // rest_position (Grad)
                        20,   // max_steering_degree
                        6);   // deadzone
@@ -100,13 +103,15 @@ void loop() {
 
 **Konstruktor:**
 ```cpp
-Motor(int pin_front, int pin_back, int max_duty, int min_duty,
-      int direction_change_delay, int freq)
+Motor(int pwm_pin_front, int pwm_pin_back, int high_pin_front, int high_pin_back,
+      int max_duty, int min_duty, int direction_change_delay, int freq)
 ```
 
 **Methoden:**
-- `void changeSpeed(int direction_vector)` - Ändert die Geschwindigkeit um direction_vector (in %)
-- `int getCurrentDuty()` - Gibt aktuellen Duty Cycle zurück
+- `void changeSpeed(int direction_vector)` - Ändert die Geschwindigkeit relativ um direction_vector (in %)
+- `void changeSpeedAbsolute(int target_duty)` - Setzt die Geschwindigkeit absolut auf target_duty (in %)
+- `int getCurrentDuty()` - Gibt aktuellen Duty Cycle zurück (-100 bis +100)
+- `int getPin(int type)` - Gibt PWM-Pin zurück (type: 1=front, -1=back)
 - `void setDeadzone(int dz)` - Setzt die Deadzone
 - `void setThreshold(int th)` - Setzt den Threshold für Fading
 - `void setThresholdTime(int tt)` - Setzt die Fading-Zeit in ms
@@ -115,13 +120,16 @@ Motor(int pin_front, int pin_back, int max_duty, int min_duty,
 
 **Konstruktor:**
 ```cpp
-SteeringServo(int pin, int rest_position, int max_steering_degree, int deadzone)
+SteeringServo(int control_pin, int power_pin, int rest_position,
+              int max_steering_degree, int deadzone)
 ```
+- `power_pin`: Pin zum Schalten der Servo-Stromversorgung (-1 wenn nicht verwendet)
 
 **Methoden:**
-- `void steer(int steering_vector)` - Lenkt um steering_vector (in %)
+- `void steer(int steering_vector)` - Lenkt relativ um steering_vector (in %)
+- `void steerAbsolute(int steering_percent)` - Lenkt absolut auf Position (-100 bis +100%)
 - `void setRestPosition()` - Setzt Servo zurück zur Rest-Position
-- `int getCurrentSteeringDegree()` - Gibt aktuelle Position zurück
+- `int getCurrentSteeringDegree()` - Gibt aktuelle Position in Grad zurück
 
 ### LEDManager
 

@@ -55,12 +55,6 @@ void printStatus(const char* action) {
   Serial.println(action);
 }
 
-// Warte bis Motor-Delay abgelaufen ist
-void waitForMotor() {
-  while (motor.checkDelay()) {  // Warte WÄHREND Delay aktiv ist
-    delay(100);
-  }
-}
 
 // ========================================
 // Testszenarien
@@ -102,7 +96,6 @@ void scenario1_StraightDriving() {
   delay(1000);
   rearLights.rest();       // Zurück zu normaler Helligkeit
 
-  waitForMotor();
   delay(2000);
 }
 
@@ -136,7 +129,6 @@ void scenario2_TurnLeft() {
   // Stoppen
   printStatus("Stopp");
   motor.changeSpeedAbsolute(0);  // Absolut auf 0%
-  waitForMotor();
   delay(2000);
 }
 
@@ -170,7 +162,6 @@ void scenario3_TurnRight() {
   // Stoppen
   printStatus("Stopp");
   motor.changeSpeedAbsolute(0);  // Absolut auf 0%
-  waitForMotor();
   delay(2000);
 }
 
@@ -210,7 +201,6 @@ void scenario4_Slalom() {
   printStatus("Stopp nach Slalom");
   motor.changeSpeedAbsolute(0);  // Absolut auf 0%
   steering.setRestPosition();
-  waitForMotor();
   delay(2000);
 }
 
@@ -246,7 +236,6 @@ void scenario5_ReverseParking() {
   leftIndicator.stopIndicating();
   rightIndicator.stopIndicating();
 
-  waitForMotor();
   delay(2000);
 }
 
@@ -274,7 +263,6 @@ void scenario6_EmergencyBrake() {
   rightIndicator.stopIndicating();
   rearLights.rest();
 
-  waitForMotor();
   delay(2000);
 }
 
@@ -308,7 +296,6 @@ void scenario7_NightDriving() {
   frontLights.rest();
   rearLights.rest();
 
-  waitForMotor();
   delay(2000);
 }
 
@@ -334,7 +321,6 @@ void scenario8_SpeedTest() {
   // Stoppen
   printStatus("Geschwindigkeitstest abgeschlossen - Stopp");
   motor.changeSpeedAbsolute(0);  // Absolut auf 0%
-  waitForMotor();
   delay(2000);
 }
 

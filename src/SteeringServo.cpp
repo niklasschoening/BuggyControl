@@ -11,7 +11,10 @@ SteeringServo::SteeringServo() {
 
 SteeringServo::SteeringServo(int control_pin,int power_pin, int _rest_position, int _max_steering_degree, int _deadzone) {
   pin = control_pin;
-  if(power_pin >= 0) {digitalWrite(power_pin, HIGH);}
+  if(power_pin >= 0) {
+    pinMode(power_pin, OUTPUT);
+    digitalWrite(power_pin, HIGH);
+  }
   rest_position = _rest_position;
   current_steering_degree = rest_position;
   max_steering_degree = _max_steering_degree;
