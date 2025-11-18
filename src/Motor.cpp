@@ -1,4 +1,5 @@
 #include "Motor.h"
+#include <cmath>
 
 Motor::Motor() {
   // Default-Konstruktor für globale Initialisierung
@@ -15,6 +16,13 @@ Motor::Motor() {
   threshold_time = 3;
   current_duty = 0;
   last_duty = 0;
+  lc_last_call = 0;
+  lc_start_time = millis();
+  is_launching = false;
+
+
+  a = 1;
+  T = 1000;
 }
 
 Motor::Motor(int _pwm_pin_front, 
@@ -108,47 +116,6 @@ int Motor::checkDutyRange(int target_duty) {
   }
 }
 
-void Motor::fadeDuty(int target_duty) {
-  target_duty = checkDutyRange(target_duty);
-
-  // Prüfe auf Richtungswechsel über die Null
-  if ((target_duty > 0 && current_duty < 0) || (target_duty < 0 && current_duty > 0)) {
-    ledcWrite(pwm_pin_front, 0);
-    digitalWrite(high_pin_front, LOW);
-    ledcWrite(pwm_pin_back, 0);
-    digitalWrite(high_pin_back, LOW);
-    current_duty = 0;
-    delay(direction_change_delay);
-  }
-
-  if (target_duty > 0) {
-    ledcWrite(pwm_pin_back, 0);
-    digitalWrite(high_pin_back, LOW);
-
-    digitalWrite(high_pin_front, HIGH);
-    ledcFade(pwm_pin_front, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
-    delay(threshold_time);
-    current_duty = target_duty;
-  } else if (target_duty < 0) {
-    ledcWrite(pwm_pin_front, 0);
-    digitalWrite(high_pin_front, LOW);
-
-    digitalWrite(high_pin_back, HIGH);
-    ledcFade(pwm_pin_back, abs(current_duty) * 255 / 100, abs(target_duty) * 255 / 100, threshold_time);
-    delay(threshold_time);
-    current_duty = target_duty;
-  } else {
-    // target_duty == 0
-    ledcWrite(pwm_pin_front, 0);
-    digitalWrite(high_pin_front, LOW);
-    ledcWrite(pwm_pin_back, 0);
-    digitalWrite(high_pin_back, LOW);
-    delay(direction_change_delay);
-    current_duty = 0;
-  }
-}
-
-
 void Motor::setDuty(int target_duty) {
   target_duty = checkDutyRange(target_duty);
 
@@ -192,31 +159,73 @@ void Motor::changeSpeed(int direction_vector) {
 
   last_duty = current_duty;
 
-  // Entscheide ob setDuty oder fadeDuty basierend auf threshold
-  if (abs(target_duty - current_duty) < threshold) {
-    setDuty(target_duty);
-  } else {
-    fadeDuty(target_duty);
-  }
+  setDuty(target_duty);
 }
 
 void Motor::changeSpeedAbsolute(int target_duty)
 {
   target_duty = checkDutyRange(target_duty);
-
-  if(abs(target_duty - current_duty) <= 3)
+  if(is_launching)
+  {
+    if(target_duty >= 90)
+    {
+      return;
+    }
+    else
+    {
+      stopLaunchControl();
+    }
+  } else if(abs(target_duty - current_duty) <= 3)
   {
     return;
   }
-
-  // Entscheide ob setDuty oder fadeDuty basierend auf threshold
-  // Richtungswechsel-Logik ist bereits in setDuty() und fadeDuty() eingebaut
-  if(abs(current_duty - target_duty) >= threshold)
-  {
-    fadeDuty(target_duty);
+  else {
+    setDuty(target_duty);
   }
-  else
+}
+
+int Motor::lcFunction(int t)
+{
+  //k = a*2*ln(p/1-p)/T
+  //f(t) = L/1+e^-k(t-t0)
+  //d(t) = 100/1+e^-(a*2*ln(0.99/1-0.99)/T)(t-T/2)
+  T = 1500; //in ms
+  a = 2;
+
+  float d = 100.0 / (1.0 + exp(-(a * 2.0 * log(0.99 / (1.0 - 0.99)) / T) * (t - T / 2.0)));
+  return d;
+}
+
+bool Motor::stopLaunchControl()
+{
+  lc_ticker.detach();
+  is_launching = false;
+}
+
+bool Motor::launchControl()
+{
+  lc_current_time = millis();
+  int target_duty = lcFunction(lc_start_time - lc_current_time);
+  if(current_duty < 0)
+  {
+    stopLaunchControl();
+  }
+  else if(current_duty < 95)
   {
     setDuty(target_duty);
   }
+  else
+  {
+    setDuty(100);
+    stopLaunchControl();
+  }
+}
+
+bool Motor::startLaunchControl()
+{
+  setDuty(0);
+  lc_start_time = millis();
+  is_launching = true;
+  lc_ticker.attach_ms(3, [this]() { this->launchControl(); });
+  return true;
 }

@@ -455,11 +455,15 @@ void setup() {
   Serial.println("Hardware initialisiert!");
   Serial.println();
 
+  // WICHTIG: Servo initialisieren (muss in setup() aufgerufen werden!)
+  printStatus("Initialisiere Servo");
+  steering.begin();
+
   // Motor-Konfiguration anpassen
   printStatus("Konfiguriere Motor-Parameter");
   motor.setDeadzone(5);        // Deadzone: ±5%
   motor.setThreshold(30);      // Threshold für Fading: 30%
-  motor.setThresholdTime(1500); // Fading-Zeit: 1.5 Sekunden
+  motor.setThresholdTime(3); // Fading-Zeit: 1.5 Sekunden
 
   Serial.print("  - Motor Front Pin: ");
   Serial.println(motor.getPin(0));

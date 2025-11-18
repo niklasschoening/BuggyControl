@@ -3,31 +3,42 @@
 SteeringServo::SteeringServo() {
   // Default-Konstruktor für globale Initialisierung
   pin = 0;
+  power_pin = -1;
   rest_position = 90;
   current_steering_degree = 90;
   max_steering_degree = 0;
   deadzone = 0;
+  initialized = false;
 }
 
-SteeringServo::SteeringServo(int control_pin, 
-                             int power_pin, 
-                             int _rest_position, 
-                             int _max_steering_degree, 
+SteeringServo::SteeringServo(int control_pin,
+                             int _power_pin,
+                             int _rest_position,
+                             int _max_steering_degree,
                              int _deadzone) {
   pin = control_pin;
-  if(power_pin >= 0) {
-    pinMode(power_pin, OUTPUT);
-    digitalWrite(power_pin, HIGH);
-  }
+  power_pin = _power_pin;
   rest_position = _rest_position;
   current_steering_degree = rest_position;
   max_steering_degree = _max_steering_degree;
   deadzone = _deadzone;
+  initialized = false;
+  // NICHT hier servo.attach() aufrufen! Das muss in begin() passieren.
+}
 
+void SteeringServo::begin() {
+  // Power-Pin aktivieren falls vorhanden
+  if(power_pin >= 0) {
+    pinMode(power_pin, OUTPUT);
+    digitalWrite(power_pin, HIGH);
+  }
+
+  // Servo initialisieren
   servo.attach(pin);
-  delay(500);
+  delay(50);
   servo.write(rest_position);
   current_steering_degree = rest_position;
+  initialized = true;
 }
 
 void SteeringServo::steer(int steering_vector) {

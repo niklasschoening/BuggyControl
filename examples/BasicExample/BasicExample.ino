@@ -14,7 +14,8 @@ Motor motor(13,      // pwm_pin_front
             10000);  // freq (Hz)
 
 // Servo initialisieren
-SteeringServo steering(23,   // pin
+SteeringServo steering(23,   // control_pin
+                       -1,   // power_pin (kein Power-Pin)
                        90,   // rest_position
                        20,   // max_steering_degree
                        6);   // deadzone
@@ -104,11 +105,6 @@ void testMotorFunctions() {
   Serial.println("\n[10] Teste setThresholdTime()");
   motor.setThresholdTime(2000);
   Serial.println("  - Threshold Time auf 2000ms gesetzt");
-
-  // Test 11: checkDelay()
-  Serial.println("\n[11] Teste checkDelay()");
-  Serial.print("  - Delay Status: ");
-  Serial.println(motor.checkDelay() ? "Kein Delay aktiv" : "Delay aktiv");
 
   Serial.println("\n[Motor Tests abgeschlossen]");
   delay(2000);
@@ -328,6 +324,11 @@ void setup() {
   pinMode(27, OUTPUT); // Motor Enable Back
 
   Serial.println("Hardware initialisiert!");
+
+  // WICHTIG: Servo initialisieren (muss in setup() aufgerufen werden!)
+  Serial.println("Initialisiere Servo...");
+  steering.begin();
+
   delay(2000);
 
   // Teste alle Klassen

@@ -2,6 +2,7 @@
 #define MOTOR_H
 
 #include <Arduino.h>
+#include <Ticker.h>
 
 class Motor {
 private:
@@ -22,9 +23,21 @@ private:
   int current_duty;
   int last_duty;
 
+  Ticker lc_ticker;
+
+  int lc_last_call;
+  int lc_current_time;
+  int lc_start_time;
+  bool is_launching;
+
+  int a;
+  int T;
+
   int checkDutyRange(int target_duty);
-  void fadeDuty(int target_duty);
   void setDuty(int target_duty);
+  
+  bool launchControl();
+  int lcFunction(int t);
 
 public:
   Motor(int pwm_pin_front, int pwm_pin_back, int high_pin_front, int high_pin_back, int max_duty, int min_duty,
@@ -39,6 +52,9 @@ public:
   void setDeadzone(int dz);
   void setThreshold(int th);
   void setThresholdTime(int tt);
+
+  bool startLaunchControl();
+  bool stopLaunchControl();
 };
 
 #endif // MOTOR_H
