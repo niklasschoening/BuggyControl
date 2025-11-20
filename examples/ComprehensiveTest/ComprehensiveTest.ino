@@ -24,8 +24,8 @@ Motor motor(13,      // pwm_pin_front
             27,      // high_pin_back
             100,     // max_duty (maximale Geschwindigkeit 100%)
             30,      // min_duty (minimale Geschwindigkeit 30%)
-            500,     // direction_change_delay (0.5 Sekunden Pause beim Richtungswechsel)
-            25000);  // freq (25kHz PWM-Frequenz)
+            3,     // direction_change_delay (0.5 Sekunden Pause beim Richtungswechsel)
+            100000);  // freq (25kHz PWM-Frequenz)
 
 // Servo initialisieren (Pin 23)
 SteeringServo steering(23,   // control_pin
@@ -459,21 +459,6 @@ void setup() {
   printStatus("Initialisiere Servo");
   steering.begin();
 
-  // Motor-Konfiguration anpassen
-  printStatus("Konfiguriere Motor-Parameter");
-  motor.setDeadzone(5);        // Deadzone: ±5%
-  motor.setThreshold(30);      // Threshold für Fading: 30%
-  motor.setThresholdTime(3); // Fading-Zeit: 1.5 Sekunden
-
-  Serial.print("  - Motor Front Pin: ");
-  Serial.println(motor.getPin(0));
-  Serial.print("  - Motor Back Pin: ");
-  Serial.println(motor.getPin(1));
-  Serial.print("  - Initial Duty: ");
-  Serial.println(motor.getCurrentDuty());
-  Serial.print("  - Initial Steering: ");
-  Serial.println(steering.getCurrentSteeringDegree());
-
   delay(2000);
 
   // ========================================
@@ -499,14 +484,8 @@ void setup() {
   Serial.println();
   Serial.println("Alle Szenarien wurden erfolgreich getestet.");
   Serial.println("Der Buggy befindet sich im Ruhezustand.");
-  Serial.println();
-  Serial.println("Bereit für manuelle Steuerung in loop().");
-  Serial.println("========================================");
 }
 
 void loop() {
-  // Hier kann deine eigene Steuerungslogik implementiert werden
-  // Zum Beispiel: Bluetooth-Steuerung, Sensoreingaben, etc.
-
   delay(1000);
 }

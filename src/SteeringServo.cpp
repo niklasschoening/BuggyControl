@@ -51,7 +51,7 @@ int SteeringServo::getCurrentSteeringDegree() {
   return current_steering_degree;
 }
 
-int SteeringServo::getCurrentSteeringPercent() 
+int SteeringServo::getCurrentSteeringPercent()
 {
   return current_steering_percent;
 }
