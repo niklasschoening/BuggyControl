@@ -30,12 +30,29 @@ private:
   int lc_start_time;
   bool is_launching;
 
+  Ticker fade_ticker;
+
+  int fade_start_time;
+  int fade_current_time;
+  int ramp;
+  int fade_time;
+  bool is_fading;
+  int fade_ticker_timing;
+  int fade_start_duty;
+  int fade_target_duty;
+
+  int break_fade_threshhold;
+
   int a;
   int T;
 
   int checkDutyRange(int target_duty);
   void setDuty(int target_duty);
   
+  void startFade(int target_duty);
+  void fading();
+  void stopFading();
+
   bool launchControl();
   int lcFunction(int t);
 

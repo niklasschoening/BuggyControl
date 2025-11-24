@@ -20,6 +20,16 @@ Motor::Motor() {
   lc_start_time = millis();
   is_launching = false;
 
+  break_fade_threshhold = 5;
+  fade_ticker_timing = 10;
+  fade_time = 300;
+  is_fading = false;
+  fade_start_time = millis();
+  fade_current_time = millis();
+  ramp = 1;
+  fade_start_duty = 0;
+  fade_target_duty = 0;
+
 
   a = 1;
   T = 1000;
@@ -110,6 +120,32 @@ void Motor::setThresholdTime(int tt) {
   threshold_time = tt;
 }
 
+void Motor::startFade(int target_duty)
+{
+  is_fading = true;
+  fade_target_duty = target_duty;
+  fade_start_time = millis();
+  fade_start_duty = current_duty;
+  ramp = (target_duty-current_duty)/fade_time;
+  fade_ticker.attach_ms(fade_ticker_timing, [this]() { this->fading(); });
+}
+
+void Motor::fading()
+{
+  fade_current_time = millis();
+  setDuty(fade_start_duty + ramp * (fade_current_time - fade_start_time));
+  if(fade_current_time - fade_start_time >= fade_time)
+  {
+    stopLaunchControl();
+  }
+}
+
+void Motor::stopFading()
+{
+  is_fading = false;
+  fade_ticker.detach();
+}
+
 int Motor::checkDutyRange(int target_duty) {
   if (abs(target_duty) < deadzone) {
     return 0;
@@ -190,11 +226,17 @@ void Motor::changeSpeedAbsolute(int target_duty)
     {
       stopLaunchControl();
     }
-  } else if(abs(target_duty - current_duty) <= 3)
-  {
-    setDuty(target_duty);
-  }
-  else {
+  } else if(is_fading) {
+    if(abs(fade_target_duty - target_duty) < break_fade_threshhold) {
+      return;
+    } else {
+      stopFading();
+    }
+  } else if(abs(target_duty - current_duty) <= 3) {
+    return;
+  } else if( abs(target_duty - current_duty) >= threshold) {
+    startFade(target_duty);
+  } else {
     setDuty(target_duty);
   }
 }
@@ -221,7 +263,7 @@ bool Motor::stopLaunchControl()
 bool Motor::launchControl()
 {
   lc_current_time = millis();
-  int target_duty = lcFunction(lc_start_time - lc_current_time);
+  int target_duty = lcFunction(lc_current_time - lc_start_time);
   if(current_duty < 0)
   {
     stopLaunchControl();
