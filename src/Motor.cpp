@@ -134,10 +134,6 @@ void Motor::setLcTime(int new_lc_time) {
   T = new_lc_time;
 }
 
-void Motor::setSafetyDelay(int new_delay) {
-  direction_change_delay = new_delay;
-}
-
 void Motor::setZero() {
   ledcWrite(pwm_pin_front, 0);
   digitalWrite(high_pin_front, LOW);

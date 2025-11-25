@@ -74,7 +74,6 @@ public:
   void setDeadzone(int dz);
   void setThreshold(int th);
   void setThresholdTime(int tt);
-  void setSafetyDelay(int new_delay);
 
   void setLcTime(int new_lc_time);
   void setFadeTime(int new_fade_time);
