@@ -74,10 +74,10 @@ Motor::Motor(int _pwm_pin_front,
   should_fade = false;
 
   // Konfiguration der jeweiligen Pins nur bei valider Initialisierung
-  // Verwende Timer 1 (Kanäle 2-3) um Konflikt mit Servo (Timer 0, 50Hz) zu vermeiden
+  // Channels werden automatisch zugewiesen
   if(freq > 0 && max_duty > 0) {
-    ledcAttachChannel(pwm_pin_front, freq, 8, 2);
-    ledcAttachChannel(pwm_pin_back, freq, 8, 3);
+    ledcAttach(pwm_pin_front, freq, 8);
+    ledcAttach(pwm_pin_back, freq, 8);
 
     pinMode(high_pin_front, OUTPUT);
     pinMode(high_pin_back, OUTPUT);
