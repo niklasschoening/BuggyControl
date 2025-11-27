@@ -12,13 +12,11 @@ LEDManager::LEDManager() : indicator_ticker() {
 }
 
 LEDManager::LEDManager(std::vector<int> _leds,
-                       std::vector<int> _channels,
                        int _rest_state,
                        int _brightness,
                        int _freq
                        ) : indicator_ticker() {
   leds = _leds;
-  channels = _channels;
   rest_state = _rest_state;
   brightness = _brightness;
   freq = _freq;
@@ -26,9 +24,10 @@ LEDManager::LEDManager(std::vector<int> _leds,
   indicator_state = false;
   indicator_timing = 600;
 
-  // Jeder Pin bekommt seinen zugewiesenen Kanal
-  for (size_t i = 0; i < leds.size() && i < channels.size(); i++) {
-    ledcAttachChannel(leds[i], freq, 8, channels[i]);
+  // Setup PWM für jeden Pin (Pins direkt verwenden)
+  for (size_t i = 0; i < leds.size(); i++) {
+    pinMode(leds[i], OUTPUT);
+    ledcAttach(leds[i], freq, 8);
   }
   rest();
 }

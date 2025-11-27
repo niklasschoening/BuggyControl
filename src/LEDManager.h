@@ -8,7 +8,6 @@
 class LEDManager {
 private:
   std::vector<int> leds;  // Pins der verwalteten LEDs
-  std::vector<int> channels;  // LEDC-Kanäle für jeden Pin
   int rest_state;  // In welchem Zustand die LED standardmässig verbleiben sollte. 0 = aus, 1 = an
   int brightness;  // Maximale Helligkeit der LED zwischen 0 und 100
   int freq;        // Frequenz der verwalteten LEDs
@@ -22,7 +21,7 @@ private:
   void indicate();
 
 public:
-  LEDManager(std::vector<int> leds, std::vector<int> channels, int rest_state, int brightness, int freq);
+  LEDManager(std::vector<int> leds, int rest_state, int brightness, int freq);
   LEDManager();  // Default-Konstruktor
 
   void rest();
