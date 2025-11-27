@@ -46,8 +46,6 @@ private:
   int delay_start_time;
   bool is_blocking;
 
-  bool should_fade;
-
   int a;
   int T;
 
@@ -72,9 +70,6 @@ public:
   int getCurrentDuty();
   void changeSpeed(int direction_vector);
   void changeSpeedAbsolute(int target_duty);
-
-  void initFading();
-  void uninitFading();
 
   void setDeadzone(int dz);
   void setThreshold(int th);
