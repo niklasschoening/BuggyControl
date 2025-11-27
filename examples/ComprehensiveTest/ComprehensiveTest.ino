@@ -427,6 +427,67 @@ void scenario10_LEDTest() {
   delay(2000);
 }
 
+void scenario11_FadingTest() {
+  printHeader("SZENARIO 11: Fading-Funktionalitaetstest");
+
+  // Fading aktivieren
+  printStatus("Fading aktiviert (initFading)");
+  motor.initFading();
+  motor.setFadeTime(500);  // 500ms Fade-Zeit
+  delay(1000);
+
+  // Test 1: Großer Sprung von 0 auf 80% - sollte sanft faden
+  printStatus("Test 1: Sanfter Sprung 0% -> 80% (mit Fading)");
+  steering.setRestPosition();
+  motor.changeSpeedAbsolute(80);
+  delay(2000);  // Warten bis Fading abgeschlossen
+
+  // Test 2: Großer Sprung zurück auf 30%
+  printStatus("Test 2: Sanfter Sprung 80% -> 30% (mit Fading)");
+  motor.changeSpeedAbsolute(30);
+  delay(2000);
+
+  // Test 3: Großer Sprung auf 100%
+  printStatus("Test 3: Sanfter Sprung 30% -> 100% (mit Fading)");
+  motor.changeSpeedAbsolute(100);
+  delay(2000);
+
+  // Test 4: Zurück auf 50%
+  printStatus("Test 4: Sanfter Sprung 100% -> 50% (mit Fading)");
+  motor.changeSpeedAbsolute(50);
+  delay(2000);
+
+  // Stoppen
+  printStatus("Stopp mit Fading");
+  motor.changeSpeedAbsolute(0);
+  delay(2000);
+
+  // Fading deaktivieren
+  printStatus("Fading deaktiviert (uninitFading)");
+  motor.uninitFading();
+  delay(1000);
+
+  // Test 5: Gleiche Sprünge OHNE Fading - sollte sofort passieren
+  printStatus("Test 5: Direkter Sprung 0% -> 80% (OHNE Fading)");
+  motor.changeSpeedAbsolute(80);
+  delay(1000);
+
+  printStatus("Test 6: Direkter Sprung 80% -> 30% (OHNE Fading)");
+  motor.changeSpeedAbsolute(30);
+  delay(1000);
+
+  printStatus("Test 7: Direkter Sprung 30% -> 100% (OHNE Fading)");
+  motor.changeSpeedAbsolute(100);
+  delay(1000);
+
+  // Stoppen
+  printStatus("Stopp");
+  motor.changeSpeedAbsolute(0);
+  delay(2000);
+
+  printStatus("Fading-Test abgeschlossen");
+}
+
 // ========================================
 // Setup und Loop
 // ========================================
@@ -459,6 +520,10 @@ void setup() {
   printStatus("Initialisiere Servo");
   steering.begin();
 
+  // WICHTIG: Fading standardmäßig deaktiviert
+  printStatus("Fading deaktiviert (Standard)");
+  motor.uninitFading();
+
   delay(2000);
 
   // ========================================
@@ -475,6 +540,7 @@ void setup() {
   scenario8_SpeedTest();
   scenario9_SteeringTest();
   scenario10_LEDTest();
+  scenario11_FadingTest();
 
   // Abschlussmeldung
   Serial.println("\n\n");

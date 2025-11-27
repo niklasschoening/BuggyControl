@@ -317,16 +317,17 @@ bool Motor::launchControl()
   int target_duty = lcFunction(lc_current_time - lc_start_time);
   if(current_duty < 0)
   {
-    stopLaunchControl();
+    return stopLaunchControl();
   }
   else if(current_duty < 95)
   {
     setDuty(target_duty);
+    return true;
   }
   else
   {
     setDuty(100);
-    stopLaunchControl();
+    return stopLaunchControl();
   }
 }
 

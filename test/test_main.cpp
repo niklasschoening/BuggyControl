@@ -4,7 +4,7 @@
 
 // Unit-Tests können hier hinzugefügt werden
 void test_motor_initialization() {
-    Motor motor(13, 12, 100, 30, 1000, 10000);
+    Motor motor(13, 12, 14, 27, 100, 30, 1000, 10000);
     TEST_ASSERT_EQUAL(0, motor.getCurrentDuty());
 }
 
