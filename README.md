@@ -372,7 +372,7 @@ motor.stopLaunchControl();   // Stoppt Launch Control
 
 ## 📝 Changelog
 
-### [1.1.0] - 2025-11-28
+### [1.2.0] - 2025-11-28
 - ✅ **Neue ActionSequencer-Klasse** für nicht-blockierendes Delay-Management
 - ✅ ActionSequencer mit Wiederholungs-Funktion und Fail-Safe
 - ✅ ActionSequencer-Test-Beispiel hinzugefügt
