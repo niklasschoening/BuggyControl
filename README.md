@@ -32,6 +32,13 @@ Eine vollständige ESP32-Arduino-Bibliothek zur Steuerung eines RC-Buggys mit Mo
 - ✅ PWM-basierte Helligkeitssteuerung (0-100%)
 - ✅ Nicht-blockierende Ticker-basierte Animationen
 
+### ⏱️ ActionSequencer-Klasse
+- ✅ Nicht-blockierendes Delay-Management (Alternative zu `delay()`)
+- ✅ Mehrere zeitgesteuerte Aktionen parallel ausführen
+- ✅ Wiederholungen mit konfigurierbarer Anzahl
+- ✅ Ticker-basierte Scheduling-Engine
+- ✅ Automatisches Cleanup nach Ausführung
+
 ---
 
 ## 📦 Installation
@@ -89,6 +96,9 @@ SteeringServo steering(23,   // control_pin
 LEDManager leftBlinker({16}, 0, 100, 1000);
 LEDManager rightBlinker({5}, 0, 100, 1000);
 
+// ActionSequencer initialisieren
+ActionSequencer sequencer(10);  // 10ms Prüfinterval
+
 void setup() {
   Serial.begin(115200);
 
@@ -113,6 +123,11 @@ void setup() {
   leftBlinker.startIndicating();
   delay(3000);
   leftBlinker.stopIndicating();
+
+  // Teste ActionSequencer (nicht-blockierend!)
+  sequencer.addSq([]() { leftBlinker.startIndicating(); }, 1000, 1);   // Nach 1s
+  sequencer.addSq([]() { leftBlinker.stopIndicating(); }, 3000, 1);    // Nach 3s
+  sequencer.addSq([]() { Serial.println("Task!"); }, 500, 5);          // 5x alle 500ms
 }
 
 void loop() {
@@ -208,6 +223,47 @@ LEDManager(std::vector<int> leds, int rest_state,
 | `void stopIndicating()` | Stoppt Blinker-Animation |
 | `void rest()` | Setzt LEDs in konfigurierten Rest-State |
 | `void setIndicatorTiming(int timing_ms)` | Setzt Blinker-Intervall in ms |
+
+---
+
+### ActionSequencer
+
+#### Konstruktor
+```cpp
+ActionSequencer(int timing)
+```
+- `timing`: Prüfintervall in Millisekunden (empfohlen: 10-50ms)
+
+#### Methoden
+| Methode | Beschreibung |
+|---------|--------------|
+| `void addSq(std::function<void()> function, int delay, int reps)` | Fügt zeitgesteuerte Aktion hinzu |
+| `void clearSq()` | Löscht alle geplanten Aktionen |
+
+**Parameter für `addSq()`:**
+- `function`: Lambda-Funktion oder Callback (z.B. `[]() { Serial.println("Hi"); }`)
+- `delay`: Verzögerung in Millisekunden bis zur Ausführung
+- `reps`: Anzahl der Wiederholungen (muss > 0 sein)
+
+**Beispiel:**
+```cpp
+ActionSequencer seq(10);
+
+// Einmalige Ausführung nach 1000ms
+seq.addSq([]() { motor.changeSpeedAbsolute(50); }, 1000, 1);
+
+// 5x wiederholen alle 500ms
+seq.addSq([]() { leftBlinker.startIndicating(); }, 500, 5);
+
+// Alle geplanten Tasks löschen
+seq.clearSq();
+```
+
+**Wichtig:**
+- Aktionen werden **nicht-blockierend** im Hintergrund ausgeführt
+- Mehrere Aktionen können parallel geplant werden
+- Automatisches Cleanup nach letzter Wiederholung
+- `reps <= 0` wird automatisch ignoriert (Fail-Safe)
 
 ---
 
@@ -315,6 +371,12 @@ motor.stopLaunchControl();   // Stoppt Launch Control
 ```
 
 ## 📝 Changelog
+
+### [1.1.0] - 2025-11-28
+- ✅ **Neue ActionSequencer-Klasse** für nicht-blockierendes Delay-Management
+- ✅ ActionSequencer mit Wiederholungs-Funktion und Fail-Safe
+- ✅ ActionSequencer-Test-Beispiel hinzugefügt
+- ✅ Vollständige ActionSequencer-Dokumentation im README
 
 ### [1.0.1-pre] - 2025-11-27
 - ✅ Fading-Toggle Funktionalität hinzugefügt (`initFading()` / `uninitFading()`)

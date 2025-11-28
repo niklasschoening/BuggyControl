@@ -5,5 +5,6 @@
 #include "Motor.h"
 #include "LEDManager.h"
 #include "SteeringServo.h"
+#include "ActionSequencer.h"
 
 #endif // BUGGY_CONTROL_H

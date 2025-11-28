@@ -8,7 +8,3 @@
 # Claude Code files
 .claude/
 .DS_Store
-
-# Work in progress - not ready for release
-src/ActionSequencer.cpp
-src/ActionSequencer.h
